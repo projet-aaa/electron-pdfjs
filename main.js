@@ -22,6 +22,7 @@ app.on('ready', function() {
   const param = qs.stringify({file: pdfURL});
 
   mainWindow.loadURL('file://' + __dirname + '/pdfjs/web/viewer.html?' + param);
+  //mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', function() {
     mainWindow = null;

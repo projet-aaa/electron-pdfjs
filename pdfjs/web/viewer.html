@@ -337,7 +337,12 @@ See https://github.com/adobe-type-tools/cmap-resources
       </div>  <!-- overlayContainer -->
 
     </div> <!-- outerContainer -->
+
     <div id="printContainer"></div>
+
+    <div id="webpage" style="display: none">
+    </div>
+
 <div id="mozPrintCallback-shim" hidden>
   <style>
 @media print {
@@ -417,7 +422,70 @@ See https://github.com/adobe-type-tools/cmap-resources
     </div>
   </div>
 </div>
+</body>
 
-  </body>
+<script>
+
+  // Handmade event listener to catch clicks on links before
+  // electron.
+  document.addEventListener('click', function(evt){
+
+    var node = evt.target;
+
+    // Back-tracking the closest a node on the supertree.
+    while (node != undefined && node.localName != 'a') {
+      node = node.parentNode;
+    }
+
+    // node is now a href element if the previous backtracking
+    // did not continue until the root of the html tree.
+    if (node != undefined) {
+
+      // Deactivate electron's default behavior
+      evt.preventDefault();
+      var req = new XMLHttpRequest();
+
+      req.open('GET', node.href, false);
+      req.send(null);
+
+      // Make the pdfjs div collapse and fill in the link's.
+      document.getElementById('outerContainer').style.display='none';
+      document.getElementById('webpage').innerHTML = req.responseText;
+      document.body.style.backgroundColor='white';
+      document.getElementById('webpage').style.display='block';
+
+      // Stop handling the click
+      return false;
+    } else {
+      // Keep handling the click
+      return true;
+    }
+
+  });
+
+  // Handmade event listener to capture a keyboard shortcut
+  // for going back to the slides.
+  document.addEventListener('keypress', function(evt){
+    if (evt.key == "Enter") {
+
+      // Deactivate electron's default behavior
+      evt.preventDefault();
+
+      // Flush the link's div and display pdfjs' one.
+      document.body.style.backgroundColor = '#404040';
+      document.getElementById('outerContainer').style.display='block';
+      document.getElementById('webpage').style.display='none';
+      document.getElementById('webpage').innerHTML='';
+
+      // Stop handling the click
+      return false;
+    } else {
+      // Keep handling the click
+      return true;
+    }
+  });
+
+</script>
+
 </html>
 

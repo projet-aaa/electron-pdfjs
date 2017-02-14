@@ -340,7 +340,16 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     <div id="printContainer"></div>
 
-    <div id="webpage" style="display: none">
+    <div id="tokenForm" style="display : none">
+        <div class="row">
+          Entrez dans le champ ci-dessous votre token d'identification (disponible sur votre page de profil), puis validez à l'aide de la touche Entrée.
+        </div>
+        <div class="row">
+          <input name="tokenInput" type="text" maxlength="1024" id="tokenInput"/>
+        </div>
+    </div>
+
+    <div id="webpage" style="display : none">
     </div>
 
 <div id="mozPrintCallback-shim" hidden>
@@ -426,6 +435,65 @@ See https://github.com/adobe-type-tools/cmap-resources
 
 <script>
 
+  // Declare a global variable token.
+  var token = '';
+
+
+  // Handmade event listener to hide the pdfjs div on load
+  // and display the token form.
+  document.addEventListener('pagerendered', function(evt){
+
+    if (token == '') {
+
+      // Hide pdfjs' div and display the token form one.
+      document.getElementById('outerContainer').style.display='none';
+      document.body.style.backgroundColor='white';
+      document.getElementById('tokenForm').style.display='block';
+
+      // Stop handling the event
+      return false;
+    } else {
+      // Keep handling the event
+      return true;
+    }
+  });
+
+  // Handmade event listener to capture a keyboard shortcut
+  // for going back to the slides and validating the token.
+  document.addEventListener('keypress', function(evt){
+    if (evt.key == "Enter") {
+
+      // Deactivate electron's default behavior
+      evt.preventDefault();
+
+      if (token == '') {
+
+        //Store the token value and start displaying the pdfjs div.
+        token=document.getElementById('tokenInput').value;
+        document.getElementById('tokenForm').style.display='none';
+        document.body.style.backgroundColor = '#404040';
+        document.getElementById('outerContainer').style.display='block';
+
+        console.log(token);
+
+      } else if (document.getElementById('outerContainer').style.display == 'none') {
+
+        // Flush the link's div and display pdfjs' one.
+        document.body.style.backgroundColor = '#404040';
+        document.getElementById('outerContainer').style.display='block';
+        document.getElementById('webpage').style.display='none';
+        document.getElementById('webpage').innerHTML='';
+
+      }
+
+      // Stop handling the event
+      return false;
+    } else {
+      // Keep handling the event
+      return true;
+    }
+  });
+
   // Handmade event listener to catch clicks on links before
   // electron.
   document.addEventListener('click', function(evt){
@@ -463,27 +531,24 @@ See https://github.com/adobe-type-tools/cmap-resources
 
   });
 
-  // Handmade event listener to capture a keyboard shortcut
-  // for going back to the slides.
-  document.addEventListener('keypress', function(evt){
-    if (evt.key == "Enter") {
+  // Global variable to store current page number.
+  var page=0;
 
-      // Deactivate electron's default behavior
-      evt.preventDefault();
+  // Handmade event listener to notify page changes (to
+  // be extended with POST http request to the API)
+  document.addEventListener('pagechange', function(evt){
 
-      // Flush the link's div and display pdfjs' one.
-      document.body.style.backgroundColor = '#404040';
-      document.getElementById('outerContainer').style.display='block';
-      document.getElementById('webpage').style.display='none';
-      document.getElementById('webpage').innerHTML='';
-
-      // Stop handling the click
-      return false;
-    } else {
-      // Keep handling the click
-      return true;
+    // If there has been an actual page change, then do stuff.
+    if (evt.pageNumber != page) {
+        page = evt.pageNumber;
+        console.log(page);
     }
+
+    // Keep handling the event.
+    return true;
+
   });
+
 
 </script>
 

@@ -474,6 +474,8 @@ See https://github.com/adobe-type-tools/cmap-resources
         document.body.style.backgroundColor = '#404040';
         document.getElementById('outerContainer').style.display='block';
 
+        sendpage();
+
         console.log(token);
 
       } else if (document.getElementById('outerContainer').style.display == 'none') {
@@ -541,6 +543,13 @@ See https://github.com/adobe-type-tools/cmap-resources
     // If there has been an actual page change, then do stuff.
     if (evt.pageNumber != page) {
         page = evt.pageNumber;
+
+        if (token != '') {
+
+            sendpage();
+
+        }
+
         console.log(page);
     }
 
@@ -548,6 +557,17 @@ See https://github.com/adobe-type-tools/cmap-resources
     return true;
 
   });
+
+  function sendpage(){
+
+    var req = new XMLHttpRequest();
+
+    req.open('POST', "http://localhost/app_dev.php/api/alerts?bearer="+token, true);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Accept", "text/html");
+    req.send(JSON.stringify({"page=" : page}));
+
+  };
 
 
 </script>

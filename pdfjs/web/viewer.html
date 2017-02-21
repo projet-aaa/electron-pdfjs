@@ -436,7 +436,12 @@ See https://github.com/adobe-type-tools/cmap-resources
 </div>
 </body>
 
+<script src="https://rawgit.com/socketio/socket.io-client/master/dist/socket.io.js"></script>
+
 <script>
+
+  // Declare a client-side socket
+  var socket = io('http://localhost:8088');
 
   // Declare a global variable token.
   var token = '';
@@ -452,6 +457,7 @@ See https://github.com/adobe-type-tools/cmap-resources
       document.getElementById('outerContainer').style.display='none';
       document.body.style.backgroundColor='white';
       document.getElementById('tokenForm').style.display='block';
+
 
       // Stop handling the event
       return false;
@@ -497,6 +503,12 @@ See https://github.com/adobe-type-tools/cmap-resources
 
             // Send initial page number now we have the token.
             sendpage();
+
+            // Connect to the node server.
+            socket.emit('action', { type : "SERVER/AUTHENTIFY", payload : {  username: username, isTeacher: true } });
+
+            // Connect to the teacher'room.
+            socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
 
         };
 

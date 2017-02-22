@@ -342,7 +342,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     <div id="tokenForm" style="display : none">
         <div class="row">
-          Entrez dans le champ ci-dessous votre token d'identification (disponible sur votre page de profil), puis validez à l'aide de la touche Entrée.
+          Entrez dans le champ ci-dessous vos identifiants (disponible sur votre page de profil), puis validez à l'aide de la touche Entrée.
         </div>
         <div class="row">
           <input name="usernameInput" type="text" maxlength="1024" id="usernameInput"/>
@@ -353,6 +353,13 @@ See https://github.com/adobe-type-tools/cmap-resources
     </div>
 
     <div id="webpage" style="display : none">
+    </div>
+
+    <div id="quiz" style="display : none">
+        <div id="question" class="row">
+        </div>
+        <div id="choices" class="row">
+        </div>
     </div>
 
 <div id="mozPrintCallback-shim" hidden>
@@ -442,6 +449,66 @@ See https://github.com/adobe-type-tools/cmap-resources
 
   // Declare a client-side socket
   var socket = io('http://localhost:8088');
+
+  var quiz = new Object();
+  quiz.set = false;
+
+  // Declare a listener on the socket for quiz
+  socket.on('action', function(data) {
+    switch(data.type) {
+      case 'TEACHER/CLASS/START_QUIZ': {
+
+        // Set the quiz object to its actual value.
+        quiz.set = true;
+        quiz.question = data.payload.quiz.question;
+        quiz.choices = data.payload.quiz.choices;
+        quiz.choiceIds = data.payload.quiz.choiceIds;
+        quiz.answer = data.payload.quiz.answer;
+        quiz.explanations = data.payload.quiz.explanations;
+        quiz.justification = data.payload.quiz.justification;
+
+        document.getElementById('question').innerHTML=quiz.question;
+        document.getElementById('choices').innerHTML='<ul>';
+        for (var i = 0; i < quiz.choices.length; i++) {
+          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+quiz.choices[i]+'</li>');
+        }
+        document.getElementById('choices').insertAdjacentHTML('beforeend','</ul>');
+
+        document.getElementById('outerContainer').style.display='none';
+        document.body.style.backgroundColor='white';
+        document.getElementById('quiz').style.display='block';
+
+        break;
+      }
+      case 'TEACHER/CLASS/SHOW_FEEDBACK': {
+
+        document.getElementById('question').innerHTML=quiz.question;
+        document.getElementById('choices').innerHTML='<ul>';
+        for (var i = 0; i < quiz.choices.length; i++) {
+          if (i == quiz.answer) {
+            document.getElementById('choices').insertAdjacentHTML('beforeend','<li><p style="color:green">'+quiz.choices[i]+' : '+quiz.justification+'</p></li>');
+          } else {
+            document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+quiz.choices[i]+'</li>');
+          }
+        }
+        document.getElementById('choices').insertAdjacentHTML('beforeend','</ul>');
+
+        document.getElementById('outerContainer').style.display='none';
+        document.body.style.backgroundColor='white';
+        document.getElementById('quiz').style.display='block';
+
+        break;
+      }
+      case 'TEACHER/CLASS/STOP_QUIZ': {
+
+        document.getElementById('quiz').style.display='none';
+        document.body.style.backgroundColor = '#404040';
+        document.getElementById('outerContainer').style.display='block';
+
+        break;
+      }
+    }
+  });
 
   // Declare a global variable token.
   var token = '';

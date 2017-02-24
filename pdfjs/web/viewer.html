@@ -342,13 +342,16 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     <div id="tokenForm" style="display : none">
         <div class="row">
-          Entrez dans le champ ci-dessous vos identifiants (disponible sur votre page de profil), puis validez à l'aide de la touche Entrée.
+          Entrez dans le champ ci-dessous vos identifiants (disponible sur votre page de profil) ainsi que le nom de la session de cours, puis validez à l'aide de la touche Entrée.
         </div>
         <div class="row">
           <input name="usernameInput" type="text" maxlength="1024" id="usernameInput"/>
         </div>
         <div class="row">
           <input name="passwordInput" type="text" maxlength="1024" id="passwordInput"/>
+        </div>
+        <div class="row">
+          <input name="sessionInput" type="text" maxlength="1024" id="sessionInput"/>
         </div>
     </div>
 
@@ -513,6 +516,12 @@ See https://github.com/adobe-type-tools/cmap-resources
   // Declare a global variable token.
   var token = '';
 
+  var api = 'http://localhost/app_dev.php/api';
+
+  var username = '';
+  var password = '';
+  var session = '';
+
 
   // Handmade event listener to hide the pdfjs div on load
   // and display the token form.
@@ -546,12 +555,13 @@ See https://github.com/adobe-type-tools/cmap-resources
       if (token == '') {
 
         var req = new XMLHttpRequest();
-        var api = 'http://localhost/app_dev.php/api/login_check';
-        var username = document.getElementById('usernameInput').value;
-        var password = document.getElementById('passwordInput').value;
+        username = document.getElementById('usernameInput').value;
+        password = document.getElementById('passwordInput').value;
+        session = document.getElementById('sessionInput').value;
         var data = "_username="+username+"&_password="+password;
 
-        req.open('POST', api, true);
+
+        req.open('POST', api + '/login_check', true);
         req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
         // Handler containing the follow up of the event listener.
@@ -559,23 +569,40 @@ See https://github.com/adobe-type-tools/cmap-resources
         // nature of the communication.
         req.onload = function() {
 
-            // Parse the JSON with to token inside.
-            var json = JSON.parse(req.responseText);
+          // Parse the JSON with to token inside.
+          var json = JSON.parse(req.responseText);
 
-            // Store the token value and start displaying the pdfjs div.
-            token=json.token;
-            document.getElementById('tokenForm').style.display='none';
-            document.body.style.backgroundColor = '#404040';
-            document.getElementById('outerContainer').style.display='block';
+          // Store the token value and start displaying the pdfjs div.
+          token=json.token;
+          document.getElementById('tokenForm').style.display='none';
+          document.body.style.backgroundColor = '#404040';
+          document.getElementById('outerContainer').style.display='block';
+
+
+          // Connect to the node server.
+          socket.emit('action', { type : "SERVER/AUTHENTIFY", payload : {  username: username, isTeacher: true } });
+
+          // Connect to the teacher'room.
+          socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
+
+
+          var reqSession = new XMLHttpRequest();
+
+          reqSession.open('GET', api+'/sessions?name='+session+'&bearer='+token, true);
+          reqSession.setRequestHeader('Accept', 'application/json');
+
+          reqSession.onload = function() {
+
+            var json = JSON.parse(reqSession.responseText);
+
+            session = '/app_dev.php/api/sessions/'+json[0].id;
 
             // Send initial page number now we have the token.
             sendpage();
 
-            // Connect to the node server.
-            socket.emit('action', { type : "SERVER/AUTHENTIFY", payload : {  username: username, isTeacher: true } });
+          };
 
-            // Connect to the teacher'room.
-            socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
+          reqSession.send(null);
 
         };
 
@@ -669,7 +696,7 @@ See https://github.com/adobe-type-tools/cmap-resources
     req.open('POST', "http://localhost/app_dev.php/api/alerts?bearer="+token, true);
     req.setRequestHeader("Content-type", "application/json");
     req.setRequestHeader("Accept", "application/json");
-    req.send(JSON.stringify({"session" : "/app_dev.php/api/sessions/e7186ba9-f35f-11e6-88fc-0242ac110003", "text" : page.toString() ,"alertType" : "page"}));
+    req.send(JSON.stringify({"session" : session, "text" : page.toString() ,"alertType" : "page"}));
 
   };
 

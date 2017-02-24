@@ -7,7 +7,7 @@ const BrowserWindow = electron.BrowserWindow;
 
 var mainWindow = null;
 
-const pdfURL = "http://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
+const pdfURL = "http://cregut.perso.enseeiht.fr/ENS/2016-1in-tob/CONTENU/to-1in-2016-cm-04-sujet.pdf";
 
 app.on('ready', function() {
   mainWindow = new BrowserWindow({

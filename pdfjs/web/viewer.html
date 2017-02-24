@@ -668,8 +668,8 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     req.open('POST', "http://localhost/app_dev.php/api/alerts?bearer="+token, true);
     req.setRequestHeader("Content-type", "application/json");
-    req.setRequestHeader("Accept", "text/html");
-    req.send(JSON.stringify({"page=" : page}));
+    req.setRequestHeader("Accept", "application/json");
+    req.send(JSON.stringify({"session" : "/app_dev.php/api/sessions/e7186ba9-f35f-11e6-88fc-0242ac110003", "text" : page.toString() ,"alertType" : "page"}));
 
   };
 

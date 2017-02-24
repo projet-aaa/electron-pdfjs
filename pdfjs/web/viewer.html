@@ -554,12 +554,13 @@ See https://github.com/adobe-type-tools/cmap-resources
       // If in login div.
       if (token == '') {
 
-        var req = new XMLHttpRequest();
-        username = document.getElementById('usernameInput').value;
+        // Fill the global variables with content of form.
+        username = document.getElementById('usernameInput').value
         password = document.getElementById('passwordInput').value;
         session = document.getElementById('sessionInput').value;
-        var data = "_username="+username+"&_password="+password;
 
+        var req = new XMLHttpRequest();
+        var data = "_username="+username+"&_password="+password;
 
         req.open('POST', api + '/login_check', true);
         req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -585,12 +586,13 @@ See https://github.com/adobe-type-tools/cmap-resources
           // Connect to the teacher'room.
           socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
 
-
+          // Create a request to get the session's iri.
           var reqSession = new XMLHttpRequest();
 
           reqSession.open('GET', api+'/sessions?name='+session+'&bearer='+token, true);
           reqSession.setRequestHeader('Accept', 'application/json');
 
+          // Handler to parse and extract session iri from the response.
           reqSession.onload = function() {
 
             var json = JSON.parse(reqSession.responseText);

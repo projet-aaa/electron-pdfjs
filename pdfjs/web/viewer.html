@@ -451,13 +451,14 @@ See https://github.com/adobe-type-tools/cmap-resources
 <script>
 
   // Declare a client-side socket
-  var socket = io('https://jetpack0.trendio.fr:8088');
+  var socket = io('https://jetpack0.trendio.fr:8080');
 
   var quiz = new Object();
   quiz.set = false;
 
   // Declare a listener on the socket for quiz
   socket.on('action', function(data) {
+
     switch(data.type) {
       case 'TEACHER/CLASS/START_QUIZ': {
 

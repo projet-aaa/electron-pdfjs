@@ -451,7 +451,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 <script>
 
   // Declare a client-side socket
-  var socket = io('http://localhost:8088');
+  var socket = io('https://jetpack0.trendio.fr:8088');
 
   var quiz = new Object();
   quiz.set = false;
@@ -516,7 +516,7 @@ See https://github.com/adobe-type-tools/cmap-resources
   // Declare a global variable token.
   var token = '';
 
-  var api = 'http://localhost/app_dev.php/api';
+  var api = 'https://jetpack0.trendio.fr/api';
 
   var username = '';
   var password = '';
@@ -564,6 +564,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 
         req.open('POST', api + '/login_check', true);
         req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        req.setRequestHeader('Accept', 'application/json');
 
         // Handler containing the follow up of the event listener.
         // This is in a separate function because of the asynchronous
@@ -590,14 +591,15 @@ See https://github.com/adobe-type-tools/cmap-resources
           var reqSession = new XMLHttpRequest();
 
           reqSession.open('GET', api+'/sessions?name='+session+'&bearer='+token, true);
-          reqSession.setRequestHeader('Accept', 'application/json');
+          reqSession.setRequestHeader('Content-type', 'application/ld+json');
+          reqSession.setRequestHeader('Accept', 'application/ld+json');
 
           // Handler to parse and extract session iri from the response.
           reqSession.onload = function() {
 
             var json = JSON.parse(reqSession.responseText);
 
-            session = '/app_dev.php/api/sessions/'+json[0].id;
+            session = json['hydra:member'][0]['@id'];
 
             // Send initial page number now we have the token.
             sendpage();
@@ -695,7 +697,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     var req = new XMLHttpRequest();
 
-    req.open('POST', "http://localhost/app_dev.php/api/alerts?bearer="+token, true);
+    req.open('POST', api+"/alerts?bearer="+token, true);
     req.setRequestHeader("Content-type", "application/json");
     req.setRequestHeader("Accept", "application/json");
     req.send(JSON.stringify({"session" : session, "text" : page.toString() ,"alertType" : "page"}));

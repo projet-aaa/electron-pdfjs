@@ -353,6 +353,9 @@ See https://github.com/adobe-type-tools/cmap-resources
         <div class="row">
           <input name="sessionInput" type="text" maxlength="1024" id="sessionInput"/>
         </div>
+        <div class="row">
+          <button id="validToken">Valider</button>
+        </div>
     </div>
 
     <div id="webpage" style="display : none">
@@ -544,10 +547,12 @@ See https://github.com/adobe-type-tools/cmap-resources
     }
   });
 
-  // Handmade event listener to capture a keyboard shortcut
+
+  // Handmade event listener to capture a keyboard shortcu
   // for going back to the slides and validating the token.
-  document.addEventListener('keypress', function(evt){
-    if (evt.key == "Enter") {
+  function enterHandler(evt) {
+
+    if (evt.key == "Enter" || evt.type == "click") {
 
       // Deactivate electron's default behavior
       evt.preventDefault();
@@ -631,7 +636,12 @@ See https://github.com/adobe-type-tools/cmap-resources
       // Keep handling the event
       return true;
     }
-  });
+  };
+
+  document.addEventListener('keypress', enterHandler);
+
+  document.getElementById('validToken').addEventListener('click', enterHandler);
+
 
   // Handmade event listener to catch clicks on links before
   // electron.

@@ -454,7 +454,6 @@ See https://github.com/adobe-type-tools/cmap-resources
   var socket = io('https://jetpack0.trendio.fr:8080');
   var api = 'https://jetpack0.trendio.fr/api';
 
-
   var quiz = new Object();
   quiz.set = false;
 
@@ -472,9 +471,19 @@ See https://github.com/adobe-type-tools/cmap-resources
   var password = '';
   var session = '';
 
+  function polling() {
+    socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
+  };
+
   // Declare a listener on the socket for quiz
   socket.on('action', function(data) {
+    console.log(data.type);
     switch(data.type) {
+      case 'CLIENT/JOIN_ROOM_RES': {
+        window.clearInterval(polling);
+        console.log('yatta!');
+        break;
+      }
       case 'TEACHER/CLASS/START_QUIZ': {
 
         // Set the quiz object to its actual value.
@@ -486,10 +495,10 @@ See https://github.com/adobe-type-tools/cmap-resources
         quiz.explanations = data.payload.quiz.explanations;
         quiz.justification = data.payload.quiz.justification;
 
-        document.getElementById('question').innerHTML=quiz.question;
+        document.getElementById('question').innerHTML='<div style="margin:auto;font-size:xx-large">'+quiz.question+'</div>';
         document.getElementById('choices').innerHTML='<ul>';
         for (var i = 0; i < quiz.choices.length; i++) {
-          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+quiz.choices[i]+'</li>');
+          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="margin:auto;font-size:x-large">'+quiz.choices[i]+'</div>'+'</li>');
         }
         document.getElementById('choices').insertAdjacentHTML('beforeend','</ul>');
 
@@ -501,13 +510,13 @@ See https://github.com/adobe-type-tools/cmap-resources
       }
       case 'TEACHER/CLASS/SHOW_FEEDBACK': {
 
-        document.getElementById('question').innerHTML=quiz.question;
+        document.getElementById('question').innerHTML='<div style="margin:auto;font-size:xx-large">'+quiz.question+'</div>';
         document.getElementById('choices').innerHTML='<ul>';
         for (var i = 0; i < quiz.choices.length; i++) {
           if (i == quiz.answer) {
-            document.getElementById('choices').insertAdjacentHTML('beforeend','<li><p style="color:green">'+quiz.choices[i]+' : '+quiz.justification+'</p></li>');
+            document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="margin:auto;font-size:x-large;color:green">'+quiz.choices[i]+'</div>'+'</li>');
           } else {
-            document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+quiz.choices[i]+'</li>');
+          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="margin:auto;font-size:x-large">'+quiz.choices[i]+'</div>'+'</li>');
           }
         }
         document.getElementById('choices').insertAdjacentHTML('beforeend','</ul>');
@@ -523,6 +532,12 @@ See https://github.com/adobe-type-tools/cmap-resources
         document.getElementById('quiz').style.display='none';
         document.body.style.backgroundColor = '#404040';
         document.getElementById('outerContainer').style.display='block';
+
+        break;
+      }
+      case 'CLIENT/ROOM_CLOSED': {
+
+        window.setInterval(polling, 5000);
 
         break;
       }

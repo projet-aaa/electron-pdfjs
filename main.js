@@ -1,13 +1,16 @@
 'use strict';
 
-const qs = require ("querystring");
+const qs = require("querystring");
 const electron = require('electron');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
+var pdfIndex = process.argv.indexOf("--pdf")+1;
+var devIndex = process.argv.indexOf("-dev");
+
 var mainWindow = null;
 
-const pdfURL = "http://cregut.perso.enseeiht.fr/ENS/2016-1in-tob/CONTENU/to-1in-2016-cm-04-sujet.pdf";
+const pdfURL = process.argv[pdfIndex];
 
 app.on('ready', function() {
   mainWindow = new BrowserWindow({
@@ -22,7 +25,10 @@ app.on('ready', function() {
   const param = qs.stringify({file: pdfURL});
 
   mainWindow.loadURL('file://' + __dirname + '/pdfjs/web/viewer.html?' + param);
-  //mainWindow.webContents.openDevTools();
+
+  if (devIndex != -1) {
+    mainWindow.webContents.openDevTools();
+  }
 
   mainWindow.on('closed', function() {
     mainWindow = null;

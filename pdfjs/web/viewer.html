@@ -358,7 +358,7 @@ See https://github.com/adobe-type-tools/cmap-resources
         </div>
     </div>
 
-    <div id="quiz" style="display : none">
+    <div id="quiz" style="display : none; text-align : center; margin-top:20%">
         <div id="question" class="row">
         </div>
         <div id="choices" class="row">
@@ -495,10 +495,10 @@ See https://github.com/adobe-type-tools/cmap-resources
         quiz.explanations = data.payload.quiz.explanations;
         quiz.justification = data.payload.quiz.justification;
 
-        document.getElementById('question').innerHTML='<div style="margin:auto;font-size:xx-large">'+quiz.question+'</div>';
+        document.getElementById('question').innerHTML='<div style="font-size:xx-large">'+quiz.question+'</div>';
         document.getElementById('choices').innerHTML='<ul>';
         for (var i = 0; i < quiz.choices.length; i++) {
-          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="margin:auto;font-size:x-large">'+quiz.choices[i]+'</div>'+'</li>');
+          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="font-size:x-large">'+quiz.choices[i]+'</div>'+'</li>');
         }
         document.getElementById('choices').insertAdjacentHTML('beforeend','</ul>');
 
@@ -510,13 +510,13 @@ See https://github.com/adobe-type-tools/cmap-resources
       }
       case 'TEACHER/CLASS/SHOW_FEEDBACK': {
 
-        document.getElementById('question').innerHTML='<div style="margin:auto;font-size:xx-large">'+quiz.question+'</div>';
+        document.getElementById('question').innerHTML='<div style="font-size:xx-large">'+quiz.question+'</div>';
         document.getElementById('choices').innerHTML='<ul>';
         for (var i = 0; i < quiz.choices.length; i++) {
           if (i == quiz.answer) {
-            document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="margin:auto;font-size:x-large;color:green">'+quiz.choices[i]+'</div>'+'</li>');
+            document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="font-size:x-large;color:green">'+quiz.choices[i]+'</div>'+'</li>');
           } else {
-          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="margin:auto;font-size:x-large">'+quiz.choices[i]+'</div>'+'</li>');
+          document.getElementById('choices').insertAdjacentHTML('beforeend','<li>'+'<div style="font-size:x-large">'+quiz.choices[i]+'</div>'+'</li>');
           }
         }
         document.getElementById('choices').insertAdjacentHTML('beforeend','</ul>');

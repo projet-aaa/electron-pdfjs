@@ -351,10 +351,15 @@ See https://github.com/adobe-type-tools/cmap-resources
           <input name="passwordInput" type="text" maxlength="1024" id="passwordInput"/>
         </div>
         <div class="row">
-          <input name="sessionInput" type="text" maxlength="1024" id="sessionInput"/>
+          <button id="validToken" onclick="loginProcedure()">Connexion</button>
+          <div id="resultLogin"></div>
         </div>
         <div class="row">
-          <button id="validToken">Valider</button>
+          <select id="sessionList"></select>
+        </div>
+        
+        <div class="row">
+          <button id="selectSession" onclick="enterPDF()">Valider</button>
         </div>
     </div>
 
@@ -446,7 +451,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 </div>
 </body>
 
-<script src="https://rawgit.com/socketio/socket.io-client/master/dist/socket.io.js"></script>
+<script src="socket.io.js"></script>
 
 <script>
 
@@ -470,6 +475,7 @@ See https://github.com/adobe-type-tools/cmap-resources
   var username = '';
   var password = '';
   var session = '';
+  var sessionList = [];
 
   function polling() {
     socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
@@ -558,7 +564,7 @@ See https://github.com/adobe-type-tools/cmap-resources
       document.body.style.backgroundColor='white';
       document.getElementById('tokenForm').style.display='block';
 
-
+		console.log('hello connect');
       // Stop handling the event
       return false;
     } else {
@@ -575,39 +581,27 @@ See https://github.com/adobe-type-tools/cmap-resources
     req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     req.setRequestHeader('Accept', 'application/json');
 
-    // Handler containing the follow up of the event listener.
-    // This is in a separate function because of the asynchronous
-    // nature of the communication.
+	//request result handler
     req.onload = function() {
-
-      // Parse the JSON with to token inside.
-      var json = JSON.parse(req.responseText);
-
-      // Store the new token value.
-      token=json.token;
+      var json = JSON.parse(req.responseText);//parse the request result.
+      token=json.token; //assign it to global variable
 
     };
 
     req.send(null);
 
   };
-
-  // Handmade event listener to capture a keyboard shortcu
-  // for going back to the slides and validating the token.
-  function enterHandler(evt) {
-
-    if (evt.key == "Enter" || evt.type == "click") {
-
-      // Deactivate electron's default behavior
-      evt.preventDefault();
-
-      // If in login div.
-      if (token == '') {
-
+  
+  /**
+   * Try to authenticate on API.
+   * Uses username and password global variable to get a token.
+   * Populate the token variable
+   */
+  function loginProcedure(){
+	  
         // Fill the global variables with content of form.
         username = document.getElementById('usernameInput').value
         password = document.getElementById('passwordInput').value;
-        session = document.getElementById('sessionInput').value;
 
         var req = new XMLHttpRequest();
         var data = "_username="+username+"&_password="+password;
@@ -616,9 +610,7 @@ See https://github.com/adobe-type-tools/cmap-resources
         req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         req.setRequestHeader('Accept', 'application/json');
 
-        // Handler containing the follow up of the event listener.
-        // This is in a separate function because of the asynchronous
-        // nature of the communication.
+        // Send result handler
         req.onload = function() {
 
           var response = req.status;
@@ -634,22 +626,154 @@ See https://github.com/adobe-type-tools/cmap-resources
           // Parse the JSON with to token inside.
           var json = JSON.parse(req.responseText);
 
+			if(json.token != undefined){
           // Store the token value and start displaying the pdfjs div.
           token=json.token;
-          document.getElementById('tokenForm').style.display='none';
-          document.body.style.backgroundColor = '#404040';
-          document.getElementById('outerContainer').style.display='block';
-          PDFViewerApplication.zoomOut();
-          PDFViewerApplication.zoomIn();
+          document.getElementById('resultLogin').innerHTML = 'connexion reussie';
+          getSessionList(0);
+	  }
+	  else{
+		document.getElementById('resultLogin').innerHTML = 'Echec de la connexion';
+	  }
+          
+         
+          
+        };
+
+        // Actually send username and password to get the token.
+        req.send(data);
+  }
+  
+  
+  function enterPDF(){
+	  document.getElementById('tokenForm').style.display='none';
+      document.body.style.backgroundColor = '#404040';
+      document.getElementById('outerContainer').style.display='block';
+      PDFViewerApplication.zoomOut();
+      PDFViewerApplication.zoomIn();
+  }
+  
+  
+	/**
+	* Populate the global list of session : sessionList
+	* @param ttl int the number of times the query has alredy been replayed.
+	*/
+	function getSessionList(ttl){
+	  if(ttl < 3){
+		var req = new XMLHttpRequest();
+		req.open('GET', api+"/sessions?bearer="+token, true);
+		req.setRequestHeader("Content-type", "application/ld+json");
+		req.setRequestHeader("Accept", "application/ld+json");
+		req.send();
+
+		req.onload = function() {
+			if (req.status != 200) {//if error code, replay the request.
+				getSessionList(ttl+1);
+			}
+			else{
+				var response = JSON.parse(req.responseText);
+				sessionList = response['hydra:member'];
+      	          displaySessionList();
+				
+			}
+				
+			}
+		}
+	}
+  
+  function displaySessionList(){
+	  console.log('sessionList');
+	  console.log(sessionList);
+	  var sessionSelect = document.getElementById("sessionSelect");
+
+	  for(session in sessionList){
+		  
+		  
+    var option = document.createElement("option");
+    option.text = "Kiwi";
+    option.value = "ant";
+    x.add(option);
+}
+	  
+	  
+  }
+
+  /** Handmade event listener to capture a keyboard shortcu
+   * for going back to the slides and validating the token.
+   */
+  function enterHandler(evt) {
+
+    if (evt.key == "Enter" || evt.type == "click") {
+
+      // Deactivate electron's default behavior
+      evt.preventDefault();
+
+      // If in login div and not connected
+      if (token == '') {
+			loginProcedure();
+	  // Stop handling the event
+      return false;
+
+}
+else if(token != '' && sessionList == []){
+	getSessionList();
+	displaySessionList();
+}
+else if(token != '' && sessionList != []){
+	session =  document.getElementById('sessionInput').value;
+	console.log(session);
+	enterPDF();
+	// Stop handling the event
+      return false;
+}
+      
+    } else {
+      // Keep handling the event
+      return true;
+    }
+  };
+
+  document.addEventListener('keypress', enterHandler);
+
+  document.getElementById('validToken').addEventListener('click', enterHandler);
+
+	/**
+	* Listen on pagechange and notify it to the API.
+	*/
+	document.addEventListener('pagechange', function(evt){
+
+	if (evt.pageNumber != page) { //if page really changed, send API call
+		page = evt.pageNumber;
+		if (token != '') {
+			sendpage();
+		}
+	}
+	return true;
+	});
 
 
-          // Connect to the node server.
-          socket.emit('action', { type : "SERVER/AUTHENTIFY", payload : {  username: username, isTeacher: true } });
+	/**
+	 * Send current page to API
+	 */
+	function sendpage(){
 
-          // Connect to the teacher'room.
-          socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
+		var req = new XMLHttpRequest();
+		req.open('POST', api+"/alerts?bearer="+token, true);
+		req.setRequestHeader("Content-type", "application/json");
+		req.setRequestHeader("Accept", "application/json");
+		req.send(JSON.stringify({"session" : session, "text" : page.toString() ,"alertType" : "page"}));
 
-          // Create a request to get the session's iri.
+		req.onload = function() {
+			if (req.status != 201) {//if error code, replay the request.
+				getNewToken();
+				sendpage();
+			}
+		};
+
+	};
+
+/**
+// Create a request to get the session's iri.
           var reqSession = new XMLHttpRequest();
 
           reqSession.open('GET', api+'/sessions?name='+session+'&bearer='+token, true);
@@ -666,66 +790,7 @@ See https://github.com/adobe-type-tools/cmap-resources
             // Send initial page number now we have the token.
             sendpage();
 
-          };
-
-          reqSession.send(null);
-
-        };
-
-        // Actually send username and password to get the token.
-        req.send(data);
-      }
-
-      // Stop handling the event
-      return false;
-    } else {
-      // Keep handling the event
-      return true;
-    }
-  };
-
-  document.addEventListener('keypress', enterHandler);
-
-  document.getElementById('validToken').addEventListener('click', enterHandler);
-
-  // Handmade event listener to notify page changes (to
-  // be extended with POST http request to the API)
-  document.addEventListener('pagechange', function(evt){
-
-    // If there has been an actual page change, then do stuff.
-    if (evt.pageNumber != page) {
-        page = evt.pageNumber;
-
-        if (token != '') {
-            sendpage();
-        }
-    }
-
-    // Keep handling the event.
-    return true;
-
-  });
-
-  function sendpage(){
-
-    var req = new XMLHttpRequest();
-
-    req.open('POST', api+"/alerts?bearer="+token, true);
-    req.setRequestHeader("Content-type", "application/json");
-    req.setRequestHeader("Accept", "application/json");
-    req.send(JSON.stringify({"session" : session, "text" : page.toString() ,"alertType" : "page"}));
-
-    req.onload = function() {
-        if (req.status != 201) {
-
-            getNewToken();
-            sendpage();
-
-        }
-    };
-
-  };
-
+*/
 
 </script>
 

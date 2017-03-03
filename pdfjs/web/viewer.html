@@ -30,6 +30,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 
 
     <link rel="stylesheet" href="viewer.css"/>
+    <link rel="stylesheet" href="jetpack.css"/>
 
     <script src="compatibility.js"></script>
 
@@ -384,27 +385,28 @@ See https://github.com/adobe-type-tools/cmap-resources
 <div id="printContainer"></div>
 
 <div id="tokenForm" style="display : none">
-    <div class="row">
-        Entrez dans le champ ci-dessous vos identifiants (disponible sur votre page de profil) ainsi que le nom de la
-        session de cours, puis validez à l'aide de la touche Entrée.
-    </div>
-    <div class="row">
-        <input name="usernameInput" type="text" maxlength="1024" id="usernameInput"/>
-    </div>
-    <div class="row">
-        <input name="passwordInput" type="text" maxlength="1024" id="passwordInput"/>
-    </div>
-    <div class="row">
-        <button id="validToken" onclick="loginProcedure()">Connexion</button>
-        <div id="resultLogin"></div>
-    </div>
-    <div class="row">
-        <select id="sessionList"></select>
-    </div>
+    <div style="margin-top:20%;  margin-left: 20%; margin-right: 20%">
 
-    <div class="row">
-        <button id="selectSession" onclick="enterPDF()">Valider</button>
-    </div>
+    <p>
+        <h3>1 Connect the viewer to Jetpack</h3>
+        <br>
+        <input name="usernameInput" type="text" id="usernameInput" placeholder="Identifiant"/>
+        <br><br>
+        <input name="passwordInput" type="password" id="passwordInput" placeholder="Password"/>
+        <br><br>
+        <button id="validToken" onclick="loginProcedure()" class="jt-btn">Connection</button>
+        <br>
+        <div id="resultLogin"></div>
+    </p>
+    <br>
+    <p style="">
+        <h3>2 Select a Session</h3>
+        <br>
+        <select id="sessionList"></select>
+        <br><br>
+
+        <button id="selectSession" onclick="enterPDF()" class="jt-btn">Launch the viewer</button>
+    </p>
 </div>
 
 <div id="quiz" style="display : none; text-align : center; margin-top:20%">
@@ -613,7 +615,6 @@ See https://github.com/adobe-type-tools/cmap-resources
             document.body.style.backgroundColor = 'white';
             document.getElementById('tokenForm').style.display = 'block';
 
-            console.log('hello connect');
             // Stop handling the event
             return false;
         } else {
@@ -679,11 +680,13 @@ See https://github.com/adobe-type-tools/cmap-resources
             if (json.token != undefined) {
                 // Store the token value and start displaying the pdfjs div.
                 token = json.token;
-                document.getElementById('resultLogin').innerHTML = 'connexion reussie';
+                document.getElementById('resultLogin').innerHTML = 'Connection succeeded';
+                document.getElementById('resultLogin').className = 'jt-alert jt-alert-success';
                 getSessionList(0);
             }
             else {
-                document.getElementById('resultLogin').innerHTML = 'Echec de la connexion';
+                document.getElementById('resultLogin').innerHTML = 'Connection failed';
+                document.getElementById('resultLogin').className = 'jt-alert jt-alert-warning';
             }
 
 
@@ -695,6 +698,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 
 
     function enterPDF() {
+        session = document.getElementById('sessionList').value;
         document.getElementById('tokenForm').style.display = 'none';
         document.body.style.backgroundColor = '#404040';
         document.getElementById('outerContainer').style.display = 'block';
@@ -732,61 +736,24 @@ See https://github.com/adobe-type-tools/cmap-resources
     }
 
     function displaySessionList() {
-        console.log('sessionList');
-        console.log(sessionList);
-        var sessionSelect = document.getElementById("sessionSelect");
+        var sessionSelect = document.getElementById("sessionList");
 
-        for (session in sessionList) {
+        //clear the ccurrent options
+        while (sessionSelect.firstChild) {
+            sessionSelect.removeChild(sessionSelect.firstChild);
+        }
 
-            console.log(session);
+        //add option from query result
+        for (sessionid in sessionList) {
             var option = document.createElement("option");
-            option.text = "Kiwi";
-            option.value = "ant";
+            option.text = sessionList[sessionid].name;
+            option.value = sessionList[sessionid]['@id'];
             sessionSelect.add(option);
         }
 
 
     }
 
-    /** Handmade event listener to capture a keyboard shortcu
-     * for going back to the slides and validating the token.
-     */
-    function enterHandler(evt) {
-
-        if (evt.key == "Enter" || evt.type == "click") {
-
-            // Deactivate electron's default behavior
-            evt.preventDefault();
-
-            // If in login div and not connected
-            if (token == '') {
-                loginProcedure();
-                // Stop handling the event
-                return false;
-
-            }
-            else if (token != '' && sessionList == []) {
-                getSessionList();
-                displaySessionList();
-            }
-            else if (token != '' && sessionList != []) {
-                session = document.getElementById('sessionInput').value;
-                console.log(session);
-                enterPDF();
-                // Stop handling the event
-                return false;
-            }
-
-        } else {
-            // Keep handling the event
-            return true;
-        }
-    }
-
-
-    document.addEventListener('keypress', enterHandler);
-
-    document.getElementById('validToken').addEventListener('click', enterHandler);
 
     /**
      * Listen on pagechange and notify it to the API.
@@ -796,7 +763,7 @@ See https://github.com/adobe-type-tools/cmap-resources
         if (evt.pageNumber != page) { //if page really changed, send API call
             page = evt.pageNumber;
             if (token != '') {
-                sendpage();
+                sendpage(0);
             }
         }
         return true;
@@ -806,7 +773,7 @@ See https://github.com/adobe-type-tools/cmap-resources
     /**
      * Send current page to API
      */
-    function sendpage() {
+    function sendpage(ttl) {
 
         var req = new XMLHttpRequest();
         req.open('POST', api + "/alerts?bearer=" + token, true);
@@ -815,34 +782,13 @@ See https://github.com/adobe-type-tools/cmap-resources
         req.send(JSON.stringify({"session": session, "text": page.toString(), "alertType": "page"}));
 
         req.onload = function () {
-            if (req.status != 201) {//if error code, replay the request.
+            if (req.status != 201 && ttl < 2) {//if error code, replay the request.
                 getNewToken();
-                sendpage();
+                sendpage(ttl+1);
             }
         };
 
     }
-    ;
-
-    /**
-     // Create a request to get the session's iri.
-     var reqSession = new XMLHttpRequest();
-
-     reqSession.open('GET', api+'/sessions?name='+session+'&bearer='+token, true);
-     reqSession.setRequestHeader('Content-type', 'application/ld+json');
-     reqSession.setRequestHeader('Accept', 'application/ld+json');
-
-     // Handler to parse and extract session iri from the response.
-     reqSession.onload = function() {
-
-            var json = JSON.parse(reqSession.responseText);
-
-            session = json['hydra:member'][0]['@id'];
-
-            // Send initial page number now we have the token.
-            sendpage();
-
-*/
 
 </script>
 

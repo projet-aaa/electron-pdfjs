@@ -17,7 +17,6 @@ function sendpage(ttl) {
     req.onload = function () {
         if (req.status != 201 && ttl < 2) {//if error code, replay the request.
             getNewToken();
-            sendpage(ttl+1);
         }
     };
 
@@ -37,11 +36,14 @@ function getNewToken() {
     //request result handler
     req.onload = function () {
         var json = JSON.parse(req.responseText);//parse the request result.
-        token = json.token; //assign it to global variable
+        if (json.token != undefined) {
+            token = json.token; //assign it to global variable
+            sendpage(ttl+1);
+        }
 
     };
 
-    req.send(null);
+    req.send(data);
 
 }
 
@@ -165,5 +167,87 @@ function displaySessionList() {
 }
 
 /**
- * Sockets : @see @hardkey & @gibss
+ * Sockets
  */
+
+
+function polling() {
+    socket.emit('action', {type: "SERVER/JOIN_ROOM", payload: {auto: true}});
+}
+
+
+// Declare a listener on the socket for quiz
+socket.on('action', function (data) {
+    console.log(data.type);
+    switch (data.type) {
+        case 'CLIENT/JOIN_ROOM_RES': {
+            window.clearInterval(polling);
+            break;
+        }
+        case 'TEACHER/CLASS/START_QUIZ': {
+
+            // Set the quiz object to its actual value.
+            quiz.set = true;
+            quiz.question = data.payload.quiz.question;
+            quiz.choices = data.payload.quiz.choices;
+            quiz.choiceIds = data.payload.quiz.choiceIds;
+            quiz.answer = data.payload.quiz.answer;
+            quiz.explanations = data.payload.quiz.explanations;
+            quiz.justification = data.payload.quiz.justification;
+
+            document.getElementById('question').innerHTML = '<div style="font-size:xx-large">' + quiz.question + '</div>';
+            document.getElementById('choices').innerHTML = '<br><ul style="list-style: none;">';
+            for (var i = 0; i < quiz.choices.length; i++) {
+                document.getElementById('choices').insertAdjacentHTML('beforeend', '<li>' + '<div style="font-size:x-large">' + quiz.choices[i] + '</div>' + '</li>');
+            }
+            document.getElementById('choices').insertAdjacentHTML('beforeend', '</ul>');
+
+            document.getElementById('outerContainer').style.display = 'none';
+            document.body.style.backgroundColor = 'white';
+            document.getElementById('quiz').style.display = 'block';
+
+            break;
+        }
+        case 'TEACHER/CLASS/SHOW_FEEDBACK': {
+
+            document.getElementById('question').innerHTML = '<div style="font-size:xx-large">' + quiz.question + '</div>';
+            document.getElementById('choices').innerHTML = '<ul>';
+            for (var i = 0; i < quiz.choices.length; i++) {
+                if (i == quiz.answer) {
+                    document.getElementById('choices').insertAdjacentHTML('beforeend', '<li>' + '<div style="font-size:x-large;color:green">' + quiz.choices[i] + '</div>' + '</li>');
+                } else {
+                    document.getElementById('choices').insertAdjacentHTML('beforeend', '<li>' + '<div style="font-size:x-large">' + quiz.choices[i] + '</div>' + '</li>');
+                }
+            }
+            document.getElementById('choices').insertAdjacentHTML('beforeend', '</ul>');
+
+            document.getElementById('outerContainer').style.display = 'none';
+            document.body.style.backgroundColor = 'white';
+            document.getElementById('quiz').style.display = 'block';
+
+            break;
+        }
+        case 'TEACHER/CLASS/STOP_QUIZ': {
+
+            document.getElementById('quiz').style.display = 'none';
+            document.body.style.backgroundColor = '#404040';
+            document.getElementById('outerContainer').style.display = 'block';
+            PDFViewerApplication.zoomOut();
+            PDFViewerApplication.zoomIn();
+
+            break;
+        }
+        case 'CLIENT/ROOM_CLOSED': {
+
+            window.setInterval(polling, 5000);
+
+            break;
+        }
+        case 'CLIENT/AUTHENTIFIED':{
+            // Connect to the teacher'room.
+            socket.emit('action', { type: "SERVER/JOIN_ROOM", payload: { auto: true } });
+            break;
+        }
+    }
+});
+

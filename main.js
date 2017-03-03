@@ -4,6 +4,7 @@ const qs = require("querystring");
 const electron = require('electron');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
+const fs = require('fs');
 
 var pdfIndex = process.argv.indexOf("--pdf") + 1;
 var devIndex = process.argv.indexOf("-dev");
@@ -25,9 +26,15 @@ app.on('ready', function () {
             webSecurity: false,
         },
     });
-    const param = qs.stringify({file: pdfURL});
 
-    mainWindow.loadURL('file://' + __dirname + '/pdfjs/web/viewer.html?' + param);
+    //load configuration
+    fs.openSync('./config.json', 'r');
+    var configuration = JSON.parse(fs.readFileSync('config.json'));
+
+    const param = qs.stringify({file: pdfURL, socket: configuration.socket, api: configuration.api});
+
+    mainWindow.loadURL('file://' + __dirname + '/pdfjs/web/viewer.html?' + param
+    );
 
     if (devIndex != -1) {
         mainWindow.webContents.openDevTools();

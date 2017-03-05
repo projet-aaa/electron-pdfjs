@@ -41,6 +41,7 @@ It is rather self-explanatory.
   "api": "https://jetpack0.trendio.fr/api"
 }
 ```
+If you create a config.json file at the root of Jetpack PDF viewer, it will override the default one.
 
 ## Developer
 

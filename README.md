@@ -14,7 +14,7 @@ Using Jetpack PDF viewer allow you to :
 
 ## Install
 
-Get the latest relase on [our release page]() and install it on your computer.
+Get the latest relase on [our release page](https://github.com/projet-aaa/electron-pdfjs/releases) and install it on your computer.
 
 ## Launch
 

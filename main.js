@@ -27,11 +27,20 @@ app.on('ready', function () {
         },
     });
 
-    //load configuration
-    fs.openSync('./config.json', 'r');
-    var configuration = JSON.parse(fs.readFileSync('config.json'));
+    var configuration = {};
+    /* load configuration */
+    if (fs.existsSync('./config.json')) { //dev mode
+        fs.openSync('./config.json', 'r');
+        configuration = JSON.parse(fs.readFileSync('./config.json'));
+    }
+    else{// prod mode (jetpack viewer as an exported application)
+        //if file doesn't exists, will throw an error
+        fs.openSync('./resources/app/config.json', 'r');
+        configuration = JSON.parse(fs.readFileSync('./resources/app/config.json'));
+    }
 
     const param = qs.stringify({file: pdfURL, socket: configuration.socket, api: configuration.api});
+
 
     mainWindow.loadURL('file://' + __dirname + '/pdfjs/web/viewer.html?' + param
     );
@@ -42,5 +51,6 @@ app.on('ready', function () {
 
     mainWindow.on('closed', function () {
         mainWindow = null;
+        app.quit();
     });
 });

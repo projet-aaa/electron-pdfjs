@@ -51,5 +51,6 @@ app.on('ready', function () {
 
     mainWindow.on('closed', function () {
         mainWindow = null;
+        app.quit();
     });
 });

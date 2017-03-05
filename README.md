@@ -18,6 +18,17 @@ Get the latest relase on [our release page]() and install it on your computer.
 
 ## Launch
 
+Once you have downloaded the app, you can launch it easily. Example : `$ ./electron-pdfjs-linux-x64/electron-pdfjs `
+
+The available options are : 
+
+`-dev` to open dev tools
+
+`--pdf YOUR_PDF_PATH` to open a given pdf
+
+Example `./electron-pdfjs-linux-x64/electron-pdfjs  -dev --pdf ./shell.pdf`
+
+If no pdf is selected, you will have the opportunity to select it in the top bar.
 
 ## Configuration
 
